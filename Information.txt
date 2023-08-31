@@ -1,0 +1,13 @@
+#Deployment Through Azure CLI:
+
+az deployment group create \
+  --resource-group <your-resource-group-name> \
+  --template-file vm-template.json \
+  --parameters adminUsername=<your-username> adminPassword=<your-password>
+
+#Deployment Through @parameters.json
+  az deployment group create \
+  --resource-group <your-resource-group-name> \
+  --template-file vm-template.json \
+  --parameters @parameters.json
+
