@@ -1,0 +1,55 @@
+1. Virtual Machines (VMs):
+
+How many virtual machines (VMs) do you want to deploy?
+What size should the VMs be (e.g., Standard_DS2_v2)?
+What operating system image do you want to use (Windows or Linux)?
+Do you need any custom configurations on the VMs?
+2. Virtual Network and Subnet:
+
+What address prefix should be used for the virtual network?
+What subnet configuration do you want (address range, security configurations)?
+3. Network Security Group (NSG):
+
+Do you have specific rules for inbound and outbound traffic?
+What is the security policy for the NSG?
+4. Tagging:
+
+Do you have a tagging strategy in place?
+What tags do you want to apply to resources (e.g., environment, department, project)?
+5. Patching:
+
+Do you have a specific patching strategy?
+How should the patching process be configured on the VMs?
+6. Anti Virus Installation:
+
+Do you have a specific antivirus solution to be installed?
+How should the antivirus software be configured on the VMs?
+7. Naming Conventions:
+
+Do you have naming conventions for resources? If yes, what are they?
+8. Authentication:
+
+How do you want to authenticate with the VMs (SSH keys for Linux, passwords for Windows)?
+9. Resource Group:
+
+In which Azure resource group should the resources be deployed?
+10. Region:
+
+In which Azure region should the resources be deployed?
+11. Azure Subscription:
+
+In which Azure subscription should the resources be deployed?
+12. Parameterize:
+
+Are there any specific parameters you want to externalize for flexibility?
+13. Outputs:
+
+Are there any specific outputs that you want to retrieve after deployment?
+Once you have answers to these questions, you can use the information to create your ARM template parameters file and configure the template accordingly. Remember to ensure that sensitive information (like passwords) is handled securely, and use Azure Key Vault for secrets management if needed.
+
+Effective communication with your client is crucial to gather accurate requirements and ensure that the ARM template you create aligns with their expectations and needs.
+
+
+
+
+
