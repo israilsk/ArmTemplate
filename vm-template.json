@@ -1,74 +1,113 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "vmName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the virtual machine."
-      }
-    },
-    "adminUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Username for the virtual machine."
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Password for the virtual machine."
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_DS2_v2",
-      "metadata": {
-        "description": "Size of the virtual machine."
-      }
-    }
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2022-03-01",
-      "name": "[parameters('vmName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
-        },
-        "osProfile": {
-          "computerName": "[parameters('vmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "MicrosoftWindowsServer",
-            "offer": "WindowsServer",
-            "sku": "2019-Datacenter",
-            "version": "latest"
-          },
-          "osDisk": {
-            "name": "osdisk",
-            "createOption": "FromImage"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'), '-nic'))]"
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2021-02-01",
+            "name": "MyVirtualNetwork",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                }
             }
-          ]
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2021-02-01",
+            "name": "[concat('MyVirtualNetwork/', 'MySubnet')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'MyVirtualNetwork')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.0.0/24"
+            }
+        },
+        {
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2020-11-01",
+            "name": "MyBastionHost",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "targetVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', 'MyVirtualNetwork')]"
+                },
+                "bastionSize": "Standard_B1s",
+                "provisioningState": "Succeeded"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat('MyVM', copyIndex())]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/bastionHosts', 'MyBastionHost')]"
+            ],
+            "copy": {
+                "name": "vmLoop",
+                "count": 5
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS2_v2"
+                },
+                "osProfile": {
+                    "computerName": "[concat('MyVM', copyIndex())]",
+                    "adminUsername": "<admin-username>",
+                    "adminPassword": "<admin-password>"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('MyVM', copyIndex(), 'NIC'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2021-02-01",
+            "name": "[concat('MyVM', copyIndex(), 'NIC')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'MyVirtualNetwork')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'MyVirtualNetwork', 'MySubnet')]"
+                            }
+                        }
+                    }
+                ]
+            }
         }
-      }
-    }
-  ],
+    ],
   "outputs": {
-    "vmId": {
-      "type": "string",
-      "value": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+    "bastionHostInfo": {
+        "type": "object",
+        "value": "[reference('MyBastionHost')]"
     }
-  }
 }
+}
+
+
